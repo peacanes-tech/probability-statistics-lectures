@@ -1,0 +1,18 @@
+{
+  "icecream": {
+    "file": "icecream.jpg",
+    "title": "File:Umpqua Ice Cream Scoops & Shakes.jpg",
+    "author": "Rick Obst",
+    "license": "CC BY 2.0",
+    "license_url": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Umpqua_Ice_Cream_Scoops_%26_Shakes.jpg"
+  },
+  "donuts": {
+    "file": "donuts.jpg",
+    "title": "File:Donuts in a box with different types.JPG",
+    "author": "Tomwsulcer",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source": "https://commons.wikimedia.org/wiki/File:Donuts_in_a_box_with_different_types.JPG"
+  }
+}

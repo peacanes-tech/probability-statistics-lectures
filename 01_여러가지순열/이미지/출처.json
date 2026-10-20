@@ -1,0 +1,58 @@
+{
+  "roundtable": {
+    "file": "roundtable.jpg",
+    "title": "File:Winchester Round Table.jpg",
+    "author": "Photograph by Mike Peel (www.mikepeel.net).",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Winchester_Round_Table.jpg"
+  },
+  "carousel": {
+    "file": "carousel.jpg",
+    "title": "File:Flying horses carousel.JPG",
+    "author": "Jared at en.wikipedia",
+    "license": "Public domain",
+    "license_url": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Flying_horses_carousel.JPG"
+  },
+  "lock": {
+    "file": "lock.jpeg",
+    "title": "File:SuitcaseCombinationLock.jpeg",
+    "author": "webandi from Pixabay",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source": "https://commons.wikimedia.org/wiki/File:SuitcaseCombinationLock.jpeg"
+  },
+  "morse": {
+    "file": "morse.jpg",
+    "title": "File:Old telegraph instruments morse key and morse sounder.JPG",
+    "author": "Kannan shanmugam,Shanmugam studio, Kollam",
+    "license": "CC BY-SA 3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Old_telegraph_instruments_morse_key_and_morse_sounder.JPG"
+  },
+  "scrabble": {
+    "file": "scrabble.jpg",
+    "title": "File:Scrabble-letters-modern-nederlands.jpg",
+    "author": "Valentijn Sessink",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source": "https://commons.wikimedia.org/wiki/File:Scrabble-letters-modern-nederlands.jpg"
+  },
+  "galileo": {
+    "file": "galileo.jpg",
+    "title": "File:Justus Sustermans - Portrait of Galileo Galilei (Uffizi) (cropped).jpg",
+    "author": "Justus Sustermans",
+    "license": "Public domain",
+    "license_url": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Justus_Sustermans_-_Portrait_of_Galileo_Galilei_(Uffizi)_(cropped).jpg"
+  },
+  "dice": {
+    "file": "dice.jpg",
+    "title": "File:Dice - 1-2-4-5-6.jpg",
+    "author": "PierreSelim",
+    "license": "CC BY 3.0",
+    "license_url": "https://creativecommons.org/licenses/by/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Dice_-_1-2-4-5-6.jpg"
+  }
+}

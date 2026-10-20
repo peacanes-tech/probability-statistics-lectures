@@ -1,0 +1,10 @@
+# 교과서·출판사 자료는 저작권 때문에 올리지 않음 (각자 00_공통/교과서에 넣어서 사용)
+*.pdf
+
+# Claude Code 개인 설정
+.claude/settings.local.json
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
