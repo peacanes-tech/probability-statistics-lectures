@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>순열 플레이그라운드</title>
+<link rel="stylesheet" href="../site.css">
+<style>
+body{background:#141518;color:#e8e8ea}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid #2a2c33}
+.top a{color:#9aa0ad;text-decoration:none;font-size:15px}
+.top h1{font-size:20px;margin:0;color:#fff}
+.top .note{font-size:13px;color:#8a8f9a;margin-left:auto}
+.wrap{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:16px;padding:16px 20px;max-width:1600px;margin:0 auto}
+@media (max-width:980px){.wrap{grid-template-columns:1fr}}
+canvas{width:100%;aspect-ratio:16/9;display:block;border-radius:12px;background:#1e1e1e}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.bar select,.bar button{font:inherit;font-size:15px;border-radius:9px;border:1px solid #3a3d46;background:#23252c;color:#e8e8ea;padding:8px 12px}
+.bar button.run{background:#e8590c;border-color:#e8590c;color:#fff;font-weight:700}
+.bar button:hover{filter:brightness(1.15)}
+.bar .sp{margin-left:auto;font-size:14px;color:#9aa0ad;display:flex;gap:6px;align-items:center}
+textarea{width:100%;height:calc(100vh - 230px);min-height:360px;resize:vertical;box-sizing:border-box;
+  background:#0f1013;color:#e6e6e6;border:1px solid #2a2c33;border-radius:12px;padding:14px;
+  font:14px/1.55 Consolas,"D2Coding","Courier New",monospace;tab-size:2;white-space:pre}
+@media (max-width:980px){textarea{height:420px}}
+#err{color:#ff8a80;font:13px/1.5 Consolas,monospace;white-space:pre-wrap;min-height:1.5em;margin-top:6px}
+.desc{font-size:15px;color:#b9bdc7;line-height:1.6;margin:8px 0 0}
+details{margin-top:14px;font-size:14px;color:#b9bdc7}
+details summary{cursor:pointer;color:#fff;font-weight:700}
+details code{color:#ffd8a8}
+details table{border-collapse:collapse;margin-top:8px;width:100%}
+details td{border-top:1px solid #2a2c33;padding:6px 8px;vertical-align:top}
+</style>
+</head>
+<body>
+<div class="top">
+  <a href="../">← 강의 홈</a>
+  <h1>순열 플레이그라운드</h1>
+  <span class="note">Manim 스타일 애니메이션을 브라우저에서 바로 실행 · 코드를 고치고 ▶ 실행 (Ctrl+Enter)</span>
+</div>
+<div class="wrap">
+  <div>
+    <canvas id="cv" aria-label="애니메이션 화면"></canvas>
+    <div class="bar">
+      <select id="preset" aria-label="장면 고르기"></select>
+      <button class="run" id="runBtn">▶ 실행</button>
+      <button id="stopBtn">■ 멈춤</button>
+      <button id="resetBtn" title="고친 코드를 지우고 처음 코드로">↺ 처음 코드로</button>
+      <label class="sp">속도
+        <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
+      </label>
+    </div>
+    <p class="desc" id="desc"></p>
+    <details>
+      <summary>사용할 수 있는 명령 (Manim과 비슷하게 만들었습니다)</summary>
+      <table>
+        <tr><td><code>Circle({r, x, y, color, fill, fillOpacity})</code><br><code>Square({side})</code> <code>Rect({w, h})</code> <code>Dot()</code></td><td>도형. 좌표는 Manim과 같이 가로 −7.1~7.1, 세로 −4~4, 위쪽이 +</td></tr>
+        <tr><td><code>Line([x1,y1],[x2,y2])</code> <code>Arrow(a, b)</code> <code>Polyline([[x,y], …])</code></td><td>선과 화살표</td></tr>
+        <tr><td><code>Text("글자", {size, color, font})</code> <code>Token("A", {color, r})</code></td><td>글자, 동그라미 글자 카드</td></tr>
+        <tr><td><code>Group([…], {x, y})</code></td><td>묶음. (x, y)를 중심으로 같이 움직이고 돈다</td></tr>
+        <tr><td><code>await play(애니메이션, …, {runTime})</code> <code>await wait(초)</code></td><td>동시에 재생 / 잠시 멈춤</td></tr>
+        <tr><td><code>Create</code> <code>Write</code> <code>FadeIn</code> <code>FadeOut</code> <code>Uncreate</code></td><td>나타나기·사라지기</td></tr>
+        <tr><td><code>MoveTo(m, x, y)</code> <code>Shift(m, dx, dy)</code> <code>Rotate(m, 도)</code> <code>ScaleTo(m, k)</code> <code>ChangeColor(m, c)</code></td><td>움직이기</td></tr>
+        <tr><td><code>Transform(a, b)</code> <code>Indicate(m)</code> <code>CountTo(text, 0, 120)</code> <code>LaggedStart([…], 0.1)</code></td><td>바꾸기, 강조, 숫자 세기, 차례로 시작</td></tr>
+        <tr><td><code>fact(n)</code> <code>comb(n, r)</code> <code>range(n)</code> <code>polar(r, 도, cx, cy)</code> <code>sup(3)</code> <code>sub(2)</code> <code>distinctPerms([…])</code></td><td>계산 도우미</td></tr>
+        <tr><td><code>BLUE YELLOW GREEN RED PURPLE ORANGE TEAL GOLD GREY WHITE</code> <code>PALETTE[i]</code></td><td>Manim 기본 색</td></tr>
+      </table>
+    </details>
+  </div>
+  <div>
+    <textarea id="code" spellcheck="false" aria-label="코드"></textarea>
+    <div id="err"></div>
+  </div>
+</div>
+
+<script src="manim-lite.js"></script>
+<script>
+const PRESETS = [
+{
+  name: "① 원순열: 돌려도 같은 배치",
+  desc: "n명을 원탁에 앉힌 뒤 한 칸씩 돌리며 읽어 봅니다. 한 줄로 읽으면 n가지지만 원탁에서는 모두 같은 배치이므로 n! ÷ n = (n−1)!. 첫 줄의 n을 3~7로 바꿔 보세요.",
+  code: `// 서로 다른 n명이 원탁에 둘러앉는 방법의 수
+const n = 4;   // ← 3~7로 바꾸고 ▶ 실행
+const names = "ABCDEFG".slice(0, n).split("");
+const cx = -3.2, cy = -0.4, R = 2.1;
+
+const title = Text("원순열: 돌려도 같은 배치", { y: 3.45, size: 0.5 });
+await play(Write(title));
+
+// 1) 먼저 한 줄로 세운다
+const people = names.map((s, i) =>
+  Token(s, { x: (i - (n - 1) / 2) * 1.0, y: 2.2, color: PALETTE[i] }));
+await play(LaggedStart(people.map(p => FadeIn(p)), 0.15));
+const note = Text(\`한 줄로 세우면 \${n}! = \${fact(n)}가지\`, { x: 3.6, y: 1.0, size: 0.38 });
+await play(Write(note));
+
+// 2) 원탁에 둘러앉힌다 (▼ 표시가 읽기 시작하는 자리)
+const table = Circle({ x: cx, y: cy, r: 1.35, color: GOLD, fill: BROWN, fillOpacity: 0.6 });
+await play(Create(table));
+await play(...people.map((p, i) => MoveTo(p, polar(R, 90 - i * 360 / n, cx, cy))));
+await play(Create(Arrow([cx, cy + R + 0.95], [cx, cy + R + 0.48]), { runTime: 0.4 }));
+
+// 3) 한 칸씩 돌리면서 ▼ 자리부터 시계 방향으로 읽는다
+const ring = Group(people, { x: cx, y: cy });
+const step = Math.min(0.55, 3.0 / n);
+for (let k = 0; k < n; k++) {
+  if (k > 0) await play(Rotate(ring, -360 / n, { runTime: 0.8 }));
+  const word = names.map((_, j) => names[(n - k + j) % n]).join("");
+  const t = Text(word, { x: 3.6, y: 0.25 - k * step, size: 0.42, font: "Consolas, monospace", color: k ? GREY : YELLOW });
+  await play(FadeIn(t, { runTime: 0.4 }));
+}
+await play(Write(Text(\`→ \${n}가지 모두 같은 배치\`, { x: 3.6, y: 0.25 - n * step, size: 0.36, color: YELLOW })));
+await wait(0.6);
+
+// 4) 결론
+const f = Text(\`\${n}! ÷ \${n} = (\${n}−1)! = \${fact(n - 1)}\`, { x: 3.6, y: -3.35, size: 0.5, color: GREEN });
+await play(Write(f));
+await play(Indicate(f));
+`
+},
+{
+  name: "② 중복순열: 가지 그림으로 nʳ",
+  desc: "학생 r명이 동아리 n개 중 하나씩 고르는 경우를 가지 그림으로 그립니다. 단계마다 가지가 n배로 늘어 nΠr = nʳ. n과 r을 바꿔 보세요 (nʳ이 81 이하일 때 보기 좋습니다).",
+  code: `// 학생 r명이 동아리 n개 중 하나씩 고르는 방법의 수
+const n = 3;   // 고를 수 있는 것의 수 → 밑
+const r = 3;   // 고르는 사람의 수   → 지수
+const title = Text(\`중복순열: 학생마다 \${n}가지씩\`, { y: 3.5, size: 0.48 });
+await play(Write(title));
+
+const x0 = -6.3, dx = 7.6 / r;
+let level = [[x0, 0]];
+await play(FadeIn(Dot({ x: x0, y: 0, r: 0.1 })));
+const count = Text("1", { x: 4.8, y: 1.3, size: 0.9, color: YELLOW });
+const formula = Text("", { x: 4.8, y: 0.1, size: 0.46 });
+add(count, formula);
+
+for (let k = 1; k <= r; k++) {
+  const leaves = n ** k, gap = Math.min(1.1, 6.6 / leaves);
+  const next = [], anims = [];
+  level.forEach(([px, py], i) => {
+    for (let c = 0; c < n; c++) {
+      const idx = i * n + c;
+      const x = x0 + k * dx, y = (leaves - 1) / 2 * gap - idx * gap;
+      next.push([x, y]);
+      anims.push(Create(Line([px, py], [x, y], { color: PALETTE[c], strokeWidth: leaves > 30 ? 1.5 : 3 })));
+      anims.push(FadeIn(leaves <= 27
+        ? Token(c + 1, { x, y, r: Math.min(0.28, gap * 0.42), color: PALETTE[c] })
+        : Dot({ x, y, r: 0.05, color: PALETTE[c] })));
+    }
+  });
+  add(Text(\`\${k}번째 학생\`, { x: x0 + k * dx, y: -3.65, size: 0.26, color: GREY }));
+  formula.text = Array(k).fill(n).join(" × ");
+  await play(LaggedStart(anims, 0.03, { runTime: 1.2 }), CountTo(count, n ** (k - 1), n ** k));
+  level = next;
+}
+const f = Text(\`\${sub(n)}Π\${sub(r)} = \${n}\${sup(r)} = \${n ** r}\`, { x: 4.8, y: -1.2, size: 0.6, color: GREEN });
+await play(Write(f));
+await play(Indicate(f));
+await play(Write(Text(\`고르는 쪽(\${r}명) → 지수, 골라지는 쪽(\${n}개) → 밑\`, { x: 4.7, y: -2.4, size: 0.23 })));
+`
+},
+{
+  name: "③ 같은 것이 있는 순열: 이름표 떼기",
+  desc: "같은 글자에 이름표(A₁, A₂, …)를 붙이면 모두 다르므로 n!가지. 이름표를 떼면 같은 글자끼리 바꾼 배열이 겹치므로 그만큼 나눕니다. word를 다른 단어로 바꿔 보세요.",
+  code: `// 같은 글자가 섞인 단어를 일렬로 나열하는 방법의 수
+const word = "BANANA";   // ← 7글자 이하로 바꿔 보세요 (예: APPLE, LEVEL, 112233)
+const letters = [...word], n = letters.length;
+const kinds = [...new Set(letters)];
+const color = ch => PALETTE[kinds.indexOf(ch) % PALETTE.length];
+const cnt = ch => letters.filter(c => c === ch).length;
+
+await play(Write(Text("같은 것이 있는 순열: 이름표 붙였다 떼기", { y: 3.5, size: 0.46 })));
+
+// ① 이름표를 붙인다
+const seen = {};
+const labeled = letters.map((ch, i) => {
+  seen[ch] = (seen[ch] || 0) + 1;
+  return Token(ch + (cnt(ch) > 1 ? sub(seen[ch]) : ""),
+    { x: (i - (n - 1) / 2) * 1.05, y: 2.3, r: 0.45, size: 0.38, color: color(ch) });
+});
+await play(LaggedStart(labeled.map(t => FadeIn(t)), 0.1));
+await play(Write(Text(\`① 이름표를 붙이면 모두 다르다 → \${n}! = \${fact(n)}\`, { y: 1.2, size: 0.38 })));
+await wait(0.5);
+
+// ② 이름표를 뗀다
+const plain = letters.map((ch, i) => Token(ch, { x: labeled[i].x, y: 2.3, r: 0.45, size: 0.5, color: color(ch) }));
+await play(...labeled.map((t, i) => Transform(t, plain[i])), { runTime: 0.8 });
+const reps = kinds.filter(ch => cnt(ch) > 1);
+const over = reps.map(ch => \`\${cnt(ch)}!\`).join(" × ") || "1";
+const overVal = reps.reduce((p, ch) => p * fact(cnt(ch)), 1);
+await play(Write(Text(\`② 이름표를 떼면 \${over} = \${overVal}가지씩 같은 모양으로 겹친다\`, { y: 0.45, size: 0.38 })));
+for (const ch of reps)
+  await play(...plain.filter((_, i) => letters[i] === ch).map(t => Indicate(t)), { runTime: 0.6 });
+
+const total = fact(n) / overVal;
+const f = Text(\`\${n}! ÷ (\${over}) = \${fact(n)} ÷ \${overVal} = \${total}\`, { y: -0.35, size: 0.5, color: GREEN });
+await play(Write(f));
+
+// ③ 진짜로 모두 나열해서 확인
+const all = distinctPerms(letters), shown = all.slice(0, 60), cols = 10;
+const cells = shown.map((w, i) => Text(w, {
+  x: ((i % cols) - (cols - 1) / 2) * 1.35, y: -1.15 - Math.floor(i / cols) * 0.42,
+  size: 0.26, font: "Consolas, monospace", color: GREY }));
+await play(LaggedStart(cells.map(c => FadeIn(c)), 0.02, { runTime: 2 }));
+if (all.length > shown.length)
+  await play(Write(Text(\`… 이렇게 모두 \${all.length}가지\`, { y: -3.75, size: 0.3 })));
+`
+},
+{
+  name: "④ 최단 경로: 화살표 나열하기",
+  desc: "바둑판에서 A → B 최단 경로는 언제나 → m번, ↑ k번. 그러니 길의 수는 화살표 m+k개를 나열하는 같은 것이 있는 순열과 같습니다. m과 k를 바꿔 보세요.",
+  code: `// 바둑판 길에서 A에서 B까지 최단 거리로 가는 방법의 수
+const m = 4;   // 오른쪽(→)으로 가는 칸 수
+const k = 2;   // 위쪽(↑)으로 가는 칸 수
+const s = Math.min(1.3, 6.4 / m, 5.2 / k);
+const ox = -6.4, oy = -2.9;
+const P = (i, j) => [ox + i * s, oy + j * s];
+
+await play(Write(Text("최단 경로 = →와 ↑를 나열하는 순서", { y: 3.5, size: 0.46 })));
+const lines = [];
+for (let i = 0; i <= m; i++) lines.push(Line(P(i, 0), P(i, k), { color: "#555555", strokeWidth: 3 }));
+for (let j = 0; j <= k; j++) lines.push(Line(P(0, j), P(m, j), { color: "#555555", strokeWidth: 3 }));
+await play(LaggedStart(lines.map(l => Create(l)), 0.05));
+await play(FadeIn(Token("A", { x: P(0, 0)[0], y: P(0, 0)[1], r: 0.3, color: WHITE })),
+           FadeIn(Token("B", { x: P(m, k)[0], y: P(m, k)[1], r: 0.3, color: WHITE })));
+
+// 모든 최단 경로 = ↑가 들어갈 자리 k곳 고르기
+const words = [];
+(function pick(start, chosen) {
+  if (chosen.length === k) { words.push(range(m + k).map(t => chosen.includes(t) ? "U" : "R")); return; }
+  for (let t = start; t < m + k; t++) pick(t + 1, [...chosen, t]);
+})(0, []);
+const pathOf = w => { let i = 0, j = 0; const pts = [P(0, 0)];
+  w.forEach(d => { d === "R" ? i++ : j++; pts.push(P(i, j)); }); return pts; };
+const arrows = w => w.map(d => d === "R" ? "→" : "↑").join("");
+
+// 길 몇 개를 하나씩 그려 보기
+const label = Text("", { x: 4.3, y: 1.6, size: 0.55, font: "Consolas, monospace", color: YELLOW });
+add(label);
+for (const w of words.slice(0, 3)) {
+  const p = Polyline(pathOf(w), { color: ORANGE, strokeWidth: 8 });
+  label.text = arrows(w);
+  await play(Create(p, { runTime: 1.2 }));
+  await play(FadeOut(p, { runTime: 0.4 }));
+}
+await play(Write(Text(\`어느 길이든 → \${m}개, ↑ \${k}개\`, { x: 4.3, y: 0.7, size: 0.38 })));
+
+// 모든 길을 겹쳐 그리며 세기
+const count = Text("0", { x: 4.3, y: -0.5, size: 0.8, color: YELLOW });
+add(count);
+const drawn = words.slice(0, 200).map(w =>
+  Polyline(pathOf(w), { color: ORANGE, strokeWidth: 2, opacity: 0.35 }));
+await play(LaggedStart(drawn.map(p => Create(p)), 0.04, { runTime: 2.5 }),
+           CountTo(count, 0, words.length, v => v + "가지", { runTime: 2.5 }));
+const f = Text(\`(\${m}+\${k})! ÷ (\${m}! × \${k}!) = \${comb(m + k, k)}\`, { x: 4.3, y: -1.8, size: 0.44, color: GREEN });
+await play(Write(f));
+await play(Indicate(f));
+`
+},
+{
+  name: "⑤ 빈 장면: 직접 만들어 보기",
+  desc: "기본 사용법 예제입니다. 도형을 만들고 await play(…)로 움직입니다. 아래 '사용할 수 있는 명령'을 참고해 자유롭게 고쳐 보세요.",
+  code: `// 도형을 만들고, play()로 애니메이션을 재생합니다.
+const c = Circle({ r: 1.2, color: BLUE, fill: BLUE, fillOpacity: 0.25 });
+await play(Create(c));
+
+const sq = Square({ side: 2.2, color: YELLOW, fill: YELLOW, fillOpacity: 0.25 });
+await play(Transform(c, sq));      // 원 → 정사각형
+await play(Rotate(sq, 45));        // 45도 돌리기
+
+const hello = Text("안녕, manim!", { x: -3.5, size: 0.6 });
+await play(Shift(sq, 3, 0), FadeIn(hello));
+
+const n = Text("0", { y: -2.5, size: 0.8, color: GREEN });
+await play(CountTo(n, 0, fact(5), v => \`5! = \${v}\`), { runTime: 2 });
+await play(Indicate(n));
+`
+}
+];
+
+const $ = id => document.getElementById(id);
+const sel = $("preset"), code = $("code"), err = $("err");
+PRESETS.forEach((p, i) => sel.add(new Option(p.name, i)));
+
+// 고친 코드는 이 브라우저에만 저장 (없어도 동작)
+const KEY = i => "manim-lite-code-" + i;
+const load = i => { try { return localStorage.getItem(KEY(i)); } catch (e) { return null; } };
+const save = (i, v) => { try { localStorage.setItem(KEY(i), v); } catch (e) {} };
+const drop = i => { try { localStorage.removeItem(KEY(i)); } catch (e) {} };
+
+function choose(i, autorun = true) {
+  sel.value = i;
+  code.value = load(i) ?? PRESETS[i].code;
+  $("desc").textContent = PRESETS[i].desc;
+  try { history.replaceState(null, "", "#" + (+i + 1)); } catch (e) {}
+  if (autorun) run();
+}
+function run() {
+  err.textContent = "";
+  ManimLite.run(code.value, e => { err.textContent = "⚠ " + (e && e.message ? e.message : e); });
+}
+ManimLite.mount($("cv"));
+sel.onchange = () => choose(+sel.value);
+$("runBtn").onclick = run;
+$("stopBtn").onclick = () => ManimLite.stop();
+$("resetBtn").onclick = () => { drop(+sel.value); choose(+sel.value); };
+$("speed").onchange = e => ManimLite.setSpeed(+e.target.value);
+code.addEventListener("input", () => save(+sel.value, code.value));
+code.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); }
+  else if (e.key === "Tab") {
+    e.preventDefault();
+    const a = code.selectionStart;
+    code.setRangeText("  ", a, code.selectionEnd, "end");
+    save(+sel.value, code.value);
+  }
+});
+const m = location.hash.match(/^#(\d)/);
+choose(m ? Math.min(PRESETS.length, +m[1]) - 1 : 0);
+</script>
+</body>
+</html>

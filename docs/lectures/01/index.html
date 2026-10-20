@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1강 여러 가지 순열</title>
+<style>
+:root{
+  --bg:#fbfaf7; --ink:#1f2433; --mute:#6b7080; --line:#e3e1da; --card:#ffffff;
+  --acc:#e8590c; --acc-soft:#fff0e6; --blue:#1c7ed6; --blue-soft:#e7f1fc;
+  --green:#2b8a3e; --green-soft:#e6f4ea; --purple:#7048e8; --wood:#c9a273;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#1b1d24;overflow:hidden;
+  font-family:"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:var(--ink)}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;background:var(--bg);
+  transform-origin:center;overflow:hidden}
+.slide{position:absolute;inset:0;padding:52px 72px 60px;display:none}
+.slide.active{display:block}
+.kicker{font-size:18px;font-weight:700;color:var(--acc);letter-spacing:.06em;margin-bottom:6px}
+h1{font-size:64px;margin:0;line-height:1.15}
+h2{font-size:42px;margin:0 0 22px;line-height:1.2}
+h3{font-size:28px;margin:0 0 10px}
+p,li{font-size:26px;line-height:1.55;margin:0 0 10px}
+ul{padding-left:1.1em;margin:0}
+.mute{color:var(--mute)}
+.acc{color:var(--acc)} .blue{color:var(--blue)} .green{color:var(--green)}
+b.hl{background:linear-gradient(transparent 60%,#ffd8a8 60%)}
+.row{display:flex;gap:36px;align-items:flex-start}
+.col{flex:1;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 26px;
+  box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.box{border-radius:16px;padding:18px 24px;font-size:26px}
+.box.acc{background:var(--acc-soft);color:var(--ink);border-left:6px solid var(--acc)}
+.box.blue{background:var(--blue-soft);color:var(--ink);border-left:6px solid var(--blue)}
+.box.green{background:var(--green-soft);color:var(--ink);border-left:6px solid var(--green)}
+.formula{font-size:40px;font-weight:700;text-align:center;padding:14px 0}
+.photo{width:100%;border-radius:16px;display:block;object-fit:cover;box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.cap{font-size:15px;color:var(--mute);margin-top:6px}
+.tag{display:inline-block;font-size:17px;font-weight:700;padding:3px 12px;border-radius:99px;
+  background:var(--acc-soft);color:var(--acc);margin-bottom:8px}
+.tag.blue{background:var(--blue-soft);color:var(--blue)}
+.tag.green{background:var(--green-soft);color:var(--green)}
+button.ui{font:inherit;font-size:19px;font-weight:700;border:0;border-radius:12px;padding:10px 18px;
+  background:var(--ink);color:#fff;cursor:pointer}
+button.ui.ghost{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+button.ui:active{transform:translateY(1px)}
+/* step reveal */
+.f{opacity:0;transform:translateY(14px);transition:opacity .5s,transform .5s}
+.f.on{opacity:1;transform:none}
+.f.pop.on{animation:pop .45s}
+@keyframes pop{0%{transform:scale(.8)}60%{transform:scale(1.06)}100%{transform:scale(1)}}
+/* math */
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;line-height:1.15;margin:0 .1em}
+.frac>span:first-child{border-bottom:.08em solid currentColor;padding:0 .2em}
+.frac>span:last-child{padding:0 .2em}
+.sb{font-size:.62em;vertical-align:-.32em;font-style:italic}
+.su{font-size:.62em;vertical-align:.55em}
+.sym{white-space:nowrap}
+/* chrome */
+#bar{position:absolute;left:0;bottom:0;height:5px;background:var(--acc);transition:width .3s;z-index:5}
+#foot{position:absolute;left:72px;right:72px;bottom:16px;display:flex;justify-content:space-between;
+  font-size:15px;color:var(--mute);z-index:5;pointer-events:none}
+#nav{position:fixed;right:14px;bottom:12px;display:flex;gap:6px;z-index:10;opacity:.25;transition:opacity .2s}
+#nav:hover{opacity:1}
+#nav button{font-size:16px;border:0;border-radius:8px;padding:8px 12px;background:#fff;cursor:pointer}
+#help{position:fixed;left:14px;bottom:12px;font-size:13px;color:#aaa;z-index:10;opacity:.6;font-family:sans-serif}
+
+/* --- slide specific --- */
+.cover-img{position:absolute;right:-110px;top:60px;width:640px;height:640px;border-radius:50%;
+  object-fit:cover;animation:spin 90s linear infinite;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.qcards{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.qcards img{height:190px}
+.qcards p{font-size:24px;font-weight:700;margin-top:12px}
+.slots{display:flex;gap:16px;justify-content:center;margin:24px 0}
+.slot{width:120px;height:120px;border:3px dashed var(--line);border-radius:18px;display:flex;
+  align-items:center;justify-content:center;font-size:46px;font-weight:800;background:#fff}
+.slot span{opacity:0;transform:scale(.5);transition:.4s}
+.on .slot span, .slot.on span{opacity:1;transform:none}
+.reading{display:flex;flex-direction:column;gap:10px}
+.reading div{font-size:40px;font-weight:800;letter-spacing:.25em;font-family:Consolas,monospace}
+.mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.mini-grid svg{width:100%;height:150px;background:#fff;border:1px solid var(--line);border-radius:14px}
+.mini-grid .f{transition-delay:calc(var(--i)*.12s)}
+table.t{border-collapse:collapse;font-size:24px;width:100%}
+table.t th,table.t td{border-bottom:1px solid var(--line);padding:9px 12px;text-align:center}
+table.t th{color:var(--mute);font-weight:700;font-size:20px}
+.wheels{display:flex;gap:14px;justify-content:center;padding:18px;background:#d9dde3;border-radius:18px;
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.2)}
+.wheel{width:84px;height:96px;overflow:hidden;border-radius:10px;background:linear-gradient(#bfc5cd,#fff 30%,#fff 70%,#bfc5cd);
+  cursor:pointer;box-shadow:inset 0 0 0 2px #9aa2ad}
+.strip{transition:transform .25s}
+.strip div{height:96px;display:flex;align-items:center;justify-content:center;font-size:58px;font-weight:800;
+  font-family:Consolas,monospace}
+.counter{font-size:30px;font-weight:800;text-align:center;margin-top:14px}
+.cells{display:flex;gap:10px;align-items:center;font-size:30px;font-weight:800;justify-content:center;margin:8px 0}
+.cell{width:72px;height:72px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  background:#fff;border:3px solid var(--line);font-size:34px}
+.cell.b{border-color:var(--blue);color:var(--blue)} .cell.a{border-color:var(--acc);color:var(--acc)}
+.morse{display:flex;flex-wrap:wrap;gap:16px}
+.code{display:flex;gap:10px;align-items:center;padding:14px 18px;background:#fff;border:1px solid var(--line);border-radius:14px}
+.dot{width:20px;height:20px;border-radius:50%;background:var(--ink)}
+.dash{width:56px;height:20px;border-radius:10px;background:var(--ink)}
+#labelRows{position:relative;height:430px}
+.lrow{position:absolute;left:0;display:flex;gap:6px;transition:transform .8s,opacity .8s}
+.tile{width:44px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+  font-size:21px;font-weight:800;color:#fff;transition:background .6s}
+.tile sub{font-size:13px;margin-left:1px;transition:opacity .5s}
+.stripped .tile sub{opacity:0}
+.stripped .tile.a{background:var(--acc)!important} .stripped .tile.b{background:var(--blue)!important}
+.collapsed .lrow:not(:first-child){transform:translateY(var(--up));opacity:0}
+.paths{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.paths svg{width:100%;background:#fff;border:1px solid var(--line);border-radius:8px}
+.paths .f{transition-delay:calc(var(--i)*.06s)}
+.chart{display:flex;align-items:flex-end;gap:6px;height:330px;padding:0 6px;border-bottom:2px solid var(--ink);position:relative}
+.bcol{flex:1;position:relative;height:100%}
+.bfill{position:absolute;bottom:0;left:0;right:0;background:#c5cad3;border-radius:5px 5px 0 0;transition:height .35s}
+.bcol.s9 .bfill{background:var(--blue)} .bcol.s10 .bfill{background:var(--acc)}
+.btheo{position:absolute;left:-2px;right:-2px;height:0;border-top:3px dashed var(--ink);opacity:.55}
+.blabels{display:flex;gap:6px;padding:4px 6px 0}
+.blabels div{flex:1;text-align:center;font-size:17px;font-weight:700}
+.legend{font-size:18px;color:var(--mute)}
+.sumtbl td,.sumtbl th{font-size:21px;padding:3px 10px;text-align:left}
+.credits li{font-size:15px;line-height:1.5;margin:0 0 4px}
+
+@media print{
+  html,body{overflow:visible;background:#fff;height:auto}
+  #stage{position:relative;left:0;top:0;transform:none!important;height:auto;overflow:visible}
+  .slide{display:block!important;position:relative;height:720px;break-after:page;overflow:hidden}
+  .f{opacity:1!important;transform:none!important}
+  #nav,#bar,#help,#foot{display:none}
+  .cover-img{animation:none}
+  @page{size:1280px 720px;margin:0}
+}
+</style>
+</head>
+<body>
+<div id="stage">
+
+<!-- 1 표지 -->
+<section class="slide" id="s-cover">
+  <img class="cover-img" src="img/roundtable.jpg" alt="윈체스터 원탁">
+  <div style="position:relative;width:640px;margin-top:120px">
+    <div class="kicker">확률과 통계 · Ⅰ. 경우의 수</div>
+    <h1>1강<br>여러 가지 순열</h1>
+    <p style="font-size:30px;margin-top:22px">원순열 · 중복순열 · 같은 것이 있는 순열</p>
+    <p class="mute" style="font-size:20px;margin-top:40px">교과서 Ⅰ-1 순열과 조합 (10~17쪽)</p>
+    <p class="mute" style="font-size:16px;margin-top:60px">→ / Space 다음 · ← 이전 · F 전체 화면</p>
+  </div>
+</section>
+
+<!-- 2 오늘의 질문 -->
+<section class="slide" data-steps="4">
+  <div class="kicker">오늘의 질문</div>
+  <h2>오늘은 이 세 가지 질문에 답합니다</h2>
+  <div class="qcards">
+    <div class="f" data-step="1"><img class="photo" src="img/roundtable.jpg" alt=""><p>① 원탁에 둘러앉는<br>방법은 몇 가지?</p></div>
+    <div class="f" data-step="2"><img class="photo" src="img/lock.jpeg" alt=""><p>② 여행 가방 자물쇠의<br>비밀번호는 몇 개?</p></div>
+    <div class="f" data-step="3"><img class="photo" src="img/scrabble.jpg" alt=""><p>③ BANANA의 글자를 섞으면<br>몇 가지가 나올까?</p></div>
+  </div>
+  <div class="box acc f" data-step="4" style="margin-top:22px;font-size:23px">
+    <b>학습목표</b> 원순열, 중복순열, 같은 것이 있는 순열을 이해하고, 그 순열의 수를 구할 수 있다.
+  </div>
+</section>
+
+<!-- 3 복습 -->
+<section class="slide" data-steps="3">
+  <div class="kicker">준비하기 · 복습</div>
+  <h2>순열은 ‘한 줄로 세우기’였습니다</h2>
+  <p>서로 다른 깃발 5개를 일렬로 나열하는 방법은?</p>
+  <div class="slots f" data-step="1">
+    <div class="slot"><span style="transition-delay:.0s">5</span></div>
+    <div class="slot"><span style="transition-delay:.25s">4</span></div>
+    <div class="slot"><span style="transition-delay:.5s">3</span></div>
+    <div class="slot"><span style="transition-delay:.75s">2</span></div>
+    <div class="slot"><span style="transition-delay:1s">1</span></div>
+  </div>
+  <p class="f formula" data-step="2">5 × 4 × 3 × 2 × 1 = 5! = <span class="acc">120</span></p>
+  <div class="row f" data-step="3">
+    <div class="box blue col">서로 다른 <i>n</i>개에서 <i>r</i>개를 택해 일렬로:<br>
+      <span class="sym" style="font-size:30px"><span class="sb">n</span>P<span class="sb">r</span> = <span class="frac"><span>n!</span><span>(n−r)!</span></span></span></div>
+    <div class="box acc col"><b>그런데</b> 한 줄이 아니라<br><b class="hl">동그랗게</b> 앉는다면?</div>
+  </div>
+</section>
+
+<!-- 4 원탁 비유 -->
+<section class="slide" data-steps="2">
+  <div class="kicker">원순열 · 비유</div>
+  <h2>아서왕의 원탁: “상석이 없는 탁자”</h2>
+  <div class="row">
+    <div style="width:520px"><img class="photo" src="img/roundtable.jpg" style="height:420px" alt="윈체스터 원탁">
+      <div class="cap">영국 윈체스터 성에 걸린 ‘아서왕의 원탁’ (13세기 제작)</div></div>
+    <div class="col">
+      <p>전설 속 아서왕은 기사들 사이에 <b>높고 낮은 자리가 생기지 않도록</b> 둥근 탁자를 만들었다고 합니다.</p>
+      <div class="box acc f" data-step="1" style="margin-top:20px">원탁에는 <b>‘첫 번째 자리’가 없다.</b><br>중요한 것은 <b class="hl">누구 옆에 누가 앉았는가</b>뿐.</div>
+      <div class="box blue f" data-step="2" style="margin-top:16px">그래서 <b>회전해서 겹치는 배열은 같은 것</b>으로 봅니다.<br>→ 이런 배열이 <b>원순열</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 회전 애니메이션 -->
+<section class="slide" id="s-rot" data-steps="4">
+  <div class="kicker">원순열 · 직접 돌려 보기</div>
+  <h2>돌려도 같은 자리 배치</h2>
+  <div class="row">
+    <div style="width:470px;text-align:center">
+      <svg id="rotSvg" viewBox="0 0 460 460" width="460" height="460"></svg>
+      <button class="ui ghost" id="rotBtn">↻ 90° 돌리기</button>
+    </div>
+    <div class="col">
+      <p class="mute" style="font-size:21px">▲ 표시한 자리부터 시계 방향으로 읽으면</p>
+      <div class="reading" id="rotList">
+        <div class="on">ABCD</div><div class="f" data-step="1">DABC</div>
+        <div class="f" data-step="2">CDAB</div><div class="f" data-step="3">BCDA</div>
+      </div>
+      <p style="margin-top:14px">한 줄로 읽으면 4가지지만 <b>원탁 위에서는 모두 같은 배열</b>입니다.</p>
+      <div class="box acc f" data-step="4">일렬 배열 4! = 24가지가 <b>4개씩 같은 것</b>으로 묶임<br>
+        → <span class="frac"><span>4!</span><span>4</span></span> = 3! = <b class="acc">6</b>가지</div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 한 명 고정 -->
+<section class="slide" id="s-fix" data-steps="2">
+  <div class="kicker">원순열 · 다른 관점</div>
+  <h2>요령: 한 사람을 기준으로 <span class="acc">고정</span>하기</h2>
+  <div class="row">
+    <div style="width:360px">
+      <img class="photo" src="img/carousel.jpg" style="height:250px" alt="회전목마">
+      <div class="cap">회전목마는 아무리 돌아도 말들의 <b>순서</b>는 그대로입니다.</div>
+      <p style="margin-top:18px;font-size:24px">노란 말(A)을 기준으로 잡고 나머지가 그 뒤에 어떤 순서로 오는지만 보면 됩니다.</p>
+    </div>
+    <div class="col">
+      <div class="mini-grid f" data-step="1" id="fixGrid"></div>
+      <div class="box blue f" data-step="2" style="margin-top:16px">A를 맨 위에 고정하면, 나머지 B, C, D를 <b>한 줄로 세우는 것</b>과 같다 → 3! = <b>6</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 공식 -->
+<section class="slide" data-steps="2">
+  <div class="kicker">원순열 · 정리</div>
+  <h2>원순열의 수</h2>
+  <div class="card" style="text-align:center">
+    <p style="font-size:24px">서로 다른 <i>n</i>개를 원형으로 배열하는 원순열의 수는</p>
+    <div class="formula" style="font-size:44px;padding:4px 0"><span class="frac"><span>n!</span><span>n</span></span> = (n − 1)!</div>
+  </div>
+  <div class="row" style="margin-top:18px">
+    <div class="col f" data-step="1">
+      <div class="box acc"><b>나누기 관점</b><br>일렬 배열 n!가지를 회전으로 겹치는 <b>n개씩</b> 묶는다</div>
+      <div class="box blue" style="margin-top:12px"><b>고정 관점</b><br>한 명을 고정하고 나머지 <b>(n−1)명을 줄 세운다</b></div>
+    </div>
+    <div class="col f" data-step="2">
+      <table class="t">
+        <tr><th>n</th><th>일렬 n!</th><th>원형 (n−1)!</th></tr>
+        <tr><td>3</td><td>6</td><td class="acc"><b>2</b></td></tr>
+        <tr><td>4</td><td>24</td><td class="acc"><b>6</b></td></tr>
+        <tr><td>5</td><td>120</td><td class="acc"><b>24</b></td></tr>
+        <tr><td>6</td><td>720</td><td class="acc"><b>120</b></td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 8 예제1: 묶기 -->
+<section class="slide" id="s-tie" data-steps="4">
+  <div class="kicker">예제 1 · 교과서 12쪽</div>
+  <h2>회장과 부회장이 <span class="acc">이웃하게</span> 앉는 경우</h2>
+  <div class="row">
+    <div style="width:440px"><svg id="tieSvg" viewBox="0 0 440 440" width="440" height="440"></svg></div>
+    <div class="col">
+      <p>회장·부회장을 포함한 5명이 원탁에 둘러앉을 때</p>
+      <div class="box blue f" data-step="1">⑴ 5명이 앉는 경우: (5−1)! = 4! = <b>24</b></div>
+      <div class="box acc f" data-step="2" style="margin-top:12px">⑵ <b>비유: 끈으로 묶기</b><br>꼭 붙어 앉을 두 사람은 <b>한 사람</b>으로 본다 → 4명의 원순열</div>
+      <p class="f formula" data-step="3" style="font-size:32px">(4−1)! = 3! = 6</p>
+      <div class="f" data-step="4">
+        <p>묶음 안에서 두 사람이 <b>자리를 바꾸는</b> 경우 2! = 2</p>
+        <p class="formula" style="font-size:34px">6 × 2 = <span class="acc">12</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 문제 -->
+<section class="slide" data-steps="4">
+  <div class="kicker">함께 풀기 · 교과서 12쪽 문제 1, 2</div>
+  <h2>풀어 봅시다</h2>
+  <div class="row">
+    <div class="col card">
+      <span class="tag">문제 1</span>
+      <p style="font-size:23px">할머니와 할아버지를 포함한 가족 6명이 원형 식탁에 둘러앉는다.</p>
+      <p style="font-size:23px">⑴ 6명이 앉는 경우의 수<br>⑵ 할머니와 할아버지가 <b>마주 보고</b> 앉는 경우의 수</p>
+      <div class="box blue f" data-step="1" style="font-size:22px">⑴ (6−1)! = 5! = <b>120</b></div>
+      <div class="box acc f" data-step="2" style="font-size:22px;margin-top:10px">⑵ 할머니를 <b>고정</b>하면 할아버지 자리는 맞은편 <b>한 곳</b>으로 정해짐.<br>나머지 4명이 남은 4자리에: 4! = <b>24</b></div>
+    </div>
+    <div class="col card">
+      <span class="tag blue">문제 2</span>
+      <div class="row" style="gap:18px">
+        <p class="col" style="font-size:23px">정팔각형 구절판(가운데 1칸 + 둘레 8칸)에 서로 다른 간식 9가지를 담는 방법은?<br><span class="mute" style="font-size:19px">(회전하여 일치하면 같은 것)</span></p>
+        <svg viewBox="0 0 160 160" width="150" height="150" aria-hidden="true">
+          <polygon points="80,6 132,28 154,80 132,132 80,154 28,132 6,80 28,28" fill="#f3d9b1" stroke="#8a5a2b" stroke-width="3"/>
+          <g stroke="#8a5a2b" stroke-width="2"><line x1="80" y1="80" x2="80" y2="6"/><line x1="80" y1="80" x2="132" y2="28"/><line x1="80" y1="80" x2="154" y2="80"/><line x1="80" y1="80" x2="132" y2="132"/><line x1="80" y1="80" x2="80" y2="154"/><line x1="80" y1="80" x2="28" y2="132"/><line x1="80" y1="80" x2="6" y2="80"/><line x1="80" y1="80" x2="28" y2="28"/></g>
+          <circle cx="80" cy="80" r="30" fill="#e8590c" stroke="#8a5a2b" stroke-width="3"/>
+        </svg>
+      </div>
+      <div class="box blue f" data-step="3" style="font-size:22px">가운데 칸은 회전해도 그대로 → <b>가운데에 올 간식 고르기</b>: 9가지</div>
+      <div class="box acc f" data-step="4" style="font-size:22px;margin-top:10px">남은 8가지는 둘레에 원순열: (8−1)! = 7!<br>→ 9 × 7! = <b>45360</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 자물쇠 -->
+<section class="slide" id="s-lock" data-steps="2">
+  <div class="kicker">중복순열 · 비유</div>
+  <h2>여행 가방 자물쇠: 같은 숫자를 <span class="blue">다시 써도</span> 된다</h2>
+  <div class="row">
+    <div style="width:470px"><img class="photo" src="img/lock.jpeg" style="height:330px" alt="세 자리 다이얼 자물쇠">
+      <p style="margin-top:14px;font-size:24px">세 자리 비밀번호. 각 자리에 0~9 중 아무 숫자나.<br><span class="mute">예: 007, 112, 999 …</span></p></div>
+    <div class="col">
+      <div class="wheels" id="wheels"></div>
+      <div class="counter" id="lockCount">000</div>
+      <div style="text-align:center;margin-top:8px;display:flex;gap:10px;justify-content:center">
+        <button class="ui" id="lockRun">000부터 999까지 세어 보기</button>
+        <button class="ui ghost" id="lockReset">처음으로</button>
+      </div>
+      <p class="mute" style="font-size:18px;text-align:center;margin-top:6px">다이얼을 클릭하면 한 칸씩 돌아갑니다</p>
+      <p class="f formula" data-step="1">10 × 10 × 10 = 10<span class="su">3</span> = <span class="blue">1000</span></p>
+      <div class="box blue f" data-step="2">자리마다 <b>똑같이 10가지</b>. 앞에서 쓴 숫자가 줄어들지 않는다!</div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 중복순열 정의 -->
+<section class="slide" data-steps="3">
+  <div class="kicker">중복순열 · 정리</div>
+  <h2>순열 vs 중복순열</h2>
+  <div class="row">
+    <div class="col card">
+      <span class="tag">순열 · 중복 ✕</span>
+      <div class="cells"><div class="cell a">5</div>×<div class="cell a">4</div>×<div class="cell a">3</div></div>
+      <p style="text-align:center"><span class="sym"><span class="sb">5</span>P<span class="sb">3</span></span> = 60 <span class="mute" style="font-size:20px">(쓴 것은 빠진다)</span></p>
+    </div>
+    <div class="col card f" data-step="1">
+      <span class="tag blue">중복순열 · 중복 ○</span>
+      <div class="cells"><div class="cell b">5</div>×<div class="cell b">5</div>×<div class="cell b">5</div></div>
+      <p style="text-align:center"><span class="sym"><span class="sb">5</span>Π<span class="sb">3</span></span> = 5<span class="su">3</span> = 125 <span class="mute" style="font-size:20px">(매번 다시 5개)</span></p>
+    </div>
+  </div>
+  <div class="card f" data-step="2" style="margin-top:16px;text-align:center;padding:14px 26px">
+    <p style="font-size:23px;margin:0">서로 다른 <i>n</i>개에서 중복을 허용하여 <i>r</i>개를 택하는 중복순열의 수</p>
+    <div class="formula" style="font-size:42px;padding:6px 0"><span class="sym"><span class="sb">n</span>Π<span class="sb">r</span></span> = n × n × ⋯ × n = n<span class="su">r</span></div>
+  </div>
+  <div class="row f" data-step="3" style="margin-top:16px">
+    <div class="box green col" style="font-size:22px">Π(파이)는 <b>곱(Product)</b>의 P에 해당하는 그리스 문자</div>
+    <div class="box acc col" style="font-size:22px">순열은 n ≥ r이어야 하지만 중복순열은 <b>n &lt; r도 가능</b><br>예: <span class="sym"><span class="sb">3</span>Π<span class="sb">4</span></span> = 3<span class="su">4</span> = 81</div>
+  </div>
+</section>
+
+<!-- 12 누가 고르는가 -->
+<section class="slide" id="s-choose" data-steps="2">
+  <div class="kicker">중복순열 · 자주 하는 실수</div>
+  <h2>밑과 지수, 헷갈리지 않으려면: <span class="acc">누가 고르는가?</span></h2>
+  <div class="row">
+    <div style="width:520px;text-align:center">
+      <svg id="chooseSvg" viewBox="0 0 520 380" width="520" height="380"></svg>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="ui" id="chooseOne">다시 고르기</button>
+        <button class="ui ghost" id="chooseMany">200번 자동</button>
+      </div>
+    </div>
+    <div class="col">
+      <p style="font-size:23px">학생 4명이 방과후 활동으로 농구·야구·축구 중 하나씩 고른다. <span class="mute">(교과서 24쪽 08번)</span></p>
+      <p class="counter" id="chooseInfo" style="text-align:left;font-size:24px">지금까지 나온 서로 다른 결과: 0가지</p>
+      <div class="box acc f" data-step="1">학생마다 <b>3가지</b> 중 선택 → 3 × 3 × 3 × 3 = 3<span class="su">4</span> = <b>81</b><br><span class="mute" style="font-size:21px">4<span class="su">3</span> = 64가 아니다!</span></div>
+      <div class="box blue f" data-step="2" style="margin-top:12px;font-size:23px"><b>고르는 쪽의 수 → 지수 r</b><br><b>골라지는 쪽의 수 → 밑 n</b><br><span class="mute" style="font-size:20px">(함수 f : X → Y의 개수 = |Y|<span class="su">|X|</span>)</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 예제2 -->
+<section class="slide" data-steps="3">
+  <div class="kicker">예제 2 · 교과서 14쪽</div>
+  <h2>0, 1, 2, 3으로 만드는 네 자리 자연수</h2>
+  <p>중복을 허용할 때, 네 자리 자연수는 몇 개?</p>
+  <div class="cells" style="margin:22px 0">
+    <div class="cell a f pop" data-step="1">3</div>×<div class="cell b f pop" data-step="2">4</div>×<div class="cell b f pop" data-step="2">4</div>×<div class="cell b f pop" data-step="2">4</div>
+  </div>
+  <div class="row">
+    <div class="box acc col f" data-step="1">천의 자리에는 <b>0이 올 수 없다</b> → 1, 2, 3의 3가지</div>
+    <div class="box blue col f" data-step="2">나머지 세 자리는 0~3 아무거나 → <span class="sym"><span class="sb">4</span>Π<span class="sb">3</span></span> = 64</div>
+  </div>
+  <p class="formula f" data-step="3">3 × 64 = <span class="acc">192</span></p>
+  <p class="f mute" data-step="3" style="font-size:21px;text-align:center">해 보기: a, b, c, d, e, f 중 3개를 택하는 중복순열 중 <b>자음으로 시작</b>하는 것은? (답: 4 × 6<span class="su">2</span> = 144)</p>
+</section>
+
+<!-- 14 모스 부호 -->
+<section class="slide" data-steps="3">
+  <div class="kicker">같은 것이 있는 순열 · 비유</div>
+  <h2>모스 부호: 점 2개와 선 2개로 만드는 신호</h2>
+  <div class="row">
+    <div style="width:430px"><img class="photo" src="img/morse.jpg" style="height:320px" alt="옛 전신기의 모스 키">
+      <div class="cap">전신기의 모스 키. 짧게(•) 길게(—) 눌러 글자를 보냈다.</div></div>
+    <div class="col">
+      <div class="morse f" data-step="1" id="morseList"></div>
+      <div class="box acc f" data-step="2" style="margin-top:18px">네 칸을 일렬로 나열하니 4! = 24일 것 같은데… 실제로는 <b>6가지</b>.</div>
+      <div class="box blue f" data-step="3" style="margin-top:12px">점끼리, 선끼리는 <b>서로 구별이 안 된다.</b><br>→ 같은 것이 있으면 겹치는 만큼 <b>나눠야</b> 한다</div>
+    </div>
+  </div>
+</section>
+
+<!-- 15 이름표 떼기 -->
+<section class="slide" id="s-label" data-steps="4">
+  <div class="kicker">같은 것이 있는 순열 · 원리</div>
+  <h2>이름표를 <span class="acc">붙였다가</span> <span class="blue">떼어</span> 보자</h2>
+  <div class="row">
+    <div style="width:330px"><div id="labelRows"></div></div>
+    <div class="col">
+      <p>a 3개, b 2개를 일렬로 나열하는 방법은?</p>
+      <div class="box acc f" data-step="1" style="font-size:23px">① 이름표를 붙이면 a₁ a₂ a₃ b₁ b₂는 모두 다르다 → <b>5! = 120</b>가지<br><span class="mute" style="font-size:20px">왼쪽은 그중 ‘aaabb’ 모양인 것만 모은 것</span></div>
+      <div class="box blue f" data-step="2" style="margin-top:12px;font-size:23px">② 이름표를 떼면 왼쪽 <b>3! × 2! = 12</b>가지가 모두 ‘aaabb’ 하나로 겹친다</div>
+      <div class="f" data-step="4" style="margin-top:12px">
+        <p class="formula" style="font-size:38px"><span class="frac"><span>5!</span><span>3! × 2!</span></span> = <span class="frac"><span>120</span><span>12</span></span> = <span class="acc">10</span></p>
+        <p class="mute" style="font-size:20px;text-align:center;font-family:Consolas,monospace">aaabb aabab aabba abaab ababa<br>abbaa baaab baaba babaa bbaaa</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 16 공식 -->
+<section class="slide" data-steps="3">
+  <div class="kicker">같은 것이 있는 순열 · 정리</div>
+  <h2>같은 것이 있는 순열의 수</h2>
+  <div class="card" style="text-align:center">
+    <p style="font-size:23px"><i>n</i>개 중에서 서로 같은 것이 각각 <i>p</i>개, <i>q</i>개, …, <i>r</i>개씩 있을 때, 일렬로 나열하는 순열의 수는</p>
+    <div class="formula" style="font-size:48px"><span class="frac"><span>n!</span><span>p! × q! × ⋯ × r!</span></span> <span style="font-size:22px;font-weight:400" class="mute">(단, p + q + ⋯ + r = n)</span></div>
+  </div>
+  <div class="row" style="margin-top:20px">
+    <div class="col box green f" data-step="1" style="font-size:23px">1, 1, 2, 2, 3으로 만드는 다섯 자리 자연수<br><span class="frac"><span>5!</span><span>2!×2!×1!</span></span> = <b>30</b></div>
+    <div class="col box acc f" data-step="2" style="font-size:23px"><b>BANANA</b> (a 3개, n 2개, b 1개)<br>⑴ <span class="frac"><span>6!</span><span>3!×2!</span></span> = <b>60</b></div>
+    <div class="col box blue f" data-step="3" style="font-size:23px">⑵ n이 양 끝에: n□□□□n<br>가운데 b, a, a, a → <span class="frac"><span>4!</span><span>3!</span></span> = <b>4</b></div>
+  </div>
+</section>
+
+<!-- 17 최단 경로 -->
+<section class="slide" id="s-grid" data-steps="2">
+  <div class="kicker">예제 3 · 교과서 16쪽</div>
+  <h2>바둑판 길에서 최단 거리로 가기</h2>
+  <div class="row">
+    <div style="width:470px;text-align:center">
+      <svg id="gridSvg" viewBox="0 0 460 260" width="460" height="260"></svg>
+      <div class="counter" id="gridWord" style="font-family:Consolas,monospace;letter-spacing:.15em">→→→→↑↑</div>
+      <button class="ui" id="gridBtn">다른 길 보기</button>
+      <p style="font-size:22px;margin-top:16px">어떤 최단 경로든 <b class="acc">→ 4번</b>, <b class="blue">↑ 2번</b>.<br>길 = 화살표 6개를 나열하는 <b>순서</b>!</p>
+    </div>
+    <div class="col">
+      <div class="paths f" data-step="1" id="pathGrid"></div>
+      <p class="formula f" data-step="2" style="font-size:36px"><span class="frac"><span>6!</span><span>4! × 2!</span></span> = <span class="acc">15</span>가지</p>
+    </div>
+  </div>
+</section>
+
+<!-- 18 갈릴레이 -->
+<section class="slide" data-steps="3">
+  <div class="kicker">수학 이야기 · 교과서 17쪽</div>
+  <h2>갈릴레이의 주사위 문제</h2>
+  <div class="row">
+    <div style="width:250px"><img class="photo" src="img/galileo.jpg" style="height:310px" alt="갈릴레오 갈릴레이 초상">
+      <div class="cap">갈릴레이(1564~1642), 수스테르만스 그림</div></div>
+    <div class="col">
+      <p style="font-size:23px">“주사위 3개의 합이 9인 조합도, 10인 조합도 6가지씩인데 왜 <b>10이 더 자주</b> 나오나요?”</p>
+      <table class="t sumtbl">
+        <tr><th>합 9</th><th class="f" data-step="1">경우</th><th>합 10</th><th class="f" data-step="1">경우</th></tr>
+        <tr><td>(1,2,6)</td><td class="f" data-step="1">3! = 6</td><td>(1,3,6)</td><td class="f" data-step="1">6</td></tr>
+        <tr><td>(1,3,5)</td><td class="f" data-step="1">6</td><td>(1,4,5)</td><td class="f" data-step="1">6</td></tr>
+        <tr><td>(2,3,4)</td><td class="f" data-step="1">6</td><td>(2,3,5)</td><td class="f" data-step="1">6</td></tr>
+        <tr><td>(1,4,4)</td><td class="f" data-step="1">3!/2! = 3</td><td>(2,2,6)</td><td class="f" data-step="1">3</td></tr>
+        <tr><td>(2,2,5)</td><td class="f" data-step="1">3</td><td>(2,4,4)</td><td class="f" data-step="1">3</td></tr>
+        <tr><td>(3,3,3)</td><td class="f" data-step="1">1</td><td>(3,3,4)</td><td class="f" data-step="1">3</td></tr>
+        <tr class="f" data-step="2"><td><b>합계</b></td><td><b class="blue">25</b></td><td><b>합계</b></td><td><b class="acc">27</b></td></tr>
+      </table>
+      <div class="box acc f" data-step="3" style="margin-top:10px;font-size:21px;padding:12px 20px">핵심: 주사위 3개를 <b>색으로 구별</b>하면 (3,3,3)은 1가지, (3,3,4)는 3가지 — 같은 것이 있는 순열!</div>
+    </div>
+  </div>
+</section>
+
+<!-- 19 시뮬레이션 -->
+<section class="slide" id="s-sim">
+  <div class="kicker">실험 · 직접 던져 보기</div>
+  <h2>정말 10이 더 자주 나올까?</h2>
+  <div class="row">
+    <div class="col" style="flex:2.1">
+      <div class="chart" id="chart"></div>
+      <div class="blabels" id="chartLabels"></div>
+      <p class="legend" style="margin-top:6px">막대: 실험 상대도수 · 점선: 이론값 (경우의 수 ÷ 216)</p>
+    </div>
+    <div class="col">
+      <img class="photo" src="img/dice.jpg" style="height:130px" alt="주사위">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0">
+        <button class="ui" data-roll="10">10번</button>
+        <button class="ui" data-roll="100">100번</button>
+        <button class="ui" data-roll="1000">1000번</button>
+        <button class="ui ghost" id="simReset">초기화</button>
+      </div>
+      <p id="simTotal" style="font-size:24px">던진 횟수: 0</p>
+      <p style="font-size:22px"><b class="blue">합 9</b>: <span id="sim9">0</span><br><span class="mute" style="font-size:18px">이론 25/216 ≈ 11.6%</span></p>
+      <p style="font-size:22px"><b class="acc">합 10</b>: <span id="sim10">0</span><br><span class="mute" style="font-size:18px">이론 27/216 ≈ 12.5%</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- 20 정리 -->
+<section class="slide" data-steps="3">
+  <div class="kicker">오늘의 정리</div>
+  <h2>세 가지 순열, 세 가지 비유</h2>
+  <table class="t" style="font-size:24px">
+    <tr><th>종류</th><th>비유</th><th>핵심 아이디어</th><th>순열의 수</th></tr>
+    <tr class="f" data-step="1"><td><b>원순열</b></td><td>원탁 · 회전목마</td><td>한 명을 고정한다</td><td><b>(n−1)!</b></td></tr>
+    <tr class="f" data-step="2"><td><b>중복순열</b></td><td>자물쇠 다이얼</td><td>자리마다 n가지 그대로</td><td><b><span class="sym"><span class="sb">n</span>Π<span class="sb">r</span></span> = n<span class="su">r</span></b></td></tr>
+    <tr class="f" data-step="3"><td><b>같은 것이 있는 순열</b></td><td>모스 부호 · 이름표</td><td>구별했다가 겹친 만큼 나눈다</td><td><b><span class="frac"><span>n!</span><span>p!q!⋯r!</span></span></b></td></tr>
+  </table>
+  <div class="box acc" style="margin-top:26px;font-size:23px">문제를 보면 먼저 물어보기: <b>① 원형인가?</b> <b>② 중복이 허용되는가?</b> <b>③ 같은 것이 있는가?</b></div>
+</section>
+
+<!-- 21 연습 -->
+<section class="slide" data-steps="1">
+  <div class="kicker">연습 문제 · 교과서 23~24쪽 중단원 마무리</div>
+  <h2>스스로 풀어 보기</h2>
+  <table class="t" style="font-size:23px">
+    <tr><th style="width:90px">번호</th><th style="text-align:left">문제</th><th style="width:260px">답</th></tr>
+    <tr><td>01</td><td style="text-align:left">정팔각형 탁자에 8명이 둘러앉는 경우의 수</td><td class="f" data-step="1">7! = 5040</td></tr>
+    <tr><td>02</td><td style="text-align:left">1~5 중 중복을 허용하여 만드는 세 자리 자연수의 개수</td><td class="f" data-step="1"><span class="sym"><span class="sb">5</span>Π<span class="sb">3</span></span> = 125</td></tr>
+    <tr><td>03</td><td style="text-align:left">a, a, b, b, b, c를 일렬로 나열하는 경우의 수</td><td class="f" data-step="1">6!/(2!3!) = 60</td></tr>
+    <tr><td>07</td><td style="text-align:left">6명이 원형으로 설 때 A와 B가 이웃하는 경우의 수</td><td class="f" data-step="1">4! × 2! = 48</td></tr>
+    <tr><td>10</td><td style="text-align:left">success의 7개 문자를 모음끼리 이웃하게 나열하는 경우의 수</td><td class="f" data-step="1">6!/(3!2!) × 2! = 120</td></tr>
+  </table>
+</section>
+
+<!-- 22 예고 & 출처 -->
+<section class="slide">
+  <div class="kicker">다음 시간</div>
+  <h2>2강 중복조합: “아이스크림 5개, 맛은 3가지”</h2>
+  <p>순서는 상관없고 중복은 허용될 때는? <span class="sym"><span class="sb">n</span>H<span class="sb">r</span></span>를 배웁니다.</p>
+  <h3 style="margin-top:34px;font-size:22px">이미지 출처 (Wikimedia Commons)</h3>
+  <ul class="credits">
+    <li>Winchester Round Table — Photograph by Mike Peel (www.mikepeel.net), CC BY-SA 4.0</li>
+    <li>Flying horses carousel — Jared at en.wikipedia, Public domain</li>
+    <li>Suitcase combination lock — webandi (Pixabay), CC0</li>
+    <li>Old telegraph instruments, morse key and morse sounder — Kannan Shanmugam, Shanmugam Studio, Kollam, CC BY-SA 3.0</li>
+    <li>Scrabble letters (modern, Nederlands) — Valentijn Sessink, CC0</li>
+    <li>Portrait of Galileo Galilei (Uffizi) — Justus Sustermans, Public domain</li>
+    <li>Dice — PierreSelim, CC BY 3.0</li>
+  </ul>
+  <p class="mute" style="font-size:16px;margin-top:10px">각 이미지의 원본 주소와 라이선스는 이미지 폴더의 출처.json에 있습니다. 문제와 예제는 미래엔 『확률과 통계』 교과서를 참고했습니다.</p>
+</section>
+
+  <div id="foot"><span>확률과 통계 · 1강 여러 가지 순열 · <span id="pageNo"></span></span></div>
+  <div id="bar"></div>
+</div>
+
+<div id="nav" title="→/Space 다음 · ← 이전 · F 전체화면"><button id="prevBtn">◀</button><button id="nextBtn">▶</button><button id="fsBtn">⛶</button></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function tween(ms, fn, done) {
+  const t0 = performance.now();
+  (function frame(t) {
+    let p = Math.min(1, (t - t0) / ms);
+    const e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+    fn(e);
+    if (p < 1) requestAnimationFrame(frame); else if (done) done();
+  })(t0);
+}
+const COLORS = { A: "#e8590c", B: "#1c7ed6", C: "#2b8a3e", D: "#7048e8", E: "#c2255c" };
+
+/* ---------- deck engine ---------- */
+const stage = $("#stage");
+const slides = $$(".slide");
+const hooks = {};
+let cur = 0, step = 0;
+const nSteps = s => +(s.dataset.steps || 0);
+
+function fit() {
+  const k = Math.min(innerWidth / 1280, innerHeight / 720);
+  stage.style.transform = `translate(-50%,-50%) scale(${k})`;
+}
+function render(animate) {
+  slides.forEach((s, i) => s.classList.toggle("active", i === cur));
+  const s = slides[cur];
+  $$("[data-step]", s).forEach(e => e.classList.toggle("on", step >= +e.dataset.step));
+  if (s.id && hooks[s.id]) hooks[s.id](step, animate);
+  $("#bar").style.width = ((cur + 1) / slides.length * 100) + "%";
+  $("#pageNo").textContent = `${cur + 1} / ${slides.length}`;
+  history.replaceState(null, "", `#${cur + 1}.${step}`);
+}
+function go(i, st, animate = false) {
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  step = Math.max(0, Math.min(nSteps(slides[cur]), st));
+  render(animate);
+}
+function next() {
+  if (step < nSteps(slides[cur])) { step++; render(true); }
+  else if (cur < slides.length - 1) go(cur + 1, 0);
+}
+function prev() {
+  if (step > 0) { step--; render(false); }
+  else if (cur > 0) go(cur - 1, nSteps(slides[cur - 1]));
+}
+addEventListener("keydown", e => {
+  if (["ArrowRight", "PageDown", " ", "Enter"].includes(e.key)) { e.preventDefault(); next(); }
+  else if (["ArrowLeft", "PageUp", "Backspace"].includes(e.key)) { e.preventDefault(); prev(); }
+  else if (e.key === "Home") go(0, 0);
+  else if (e.key === "End") go(slides.length - 1, 0);
+  else if (e.key === "f" || e.key === "F") toggleFs();
+});
+function toggleFs() {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen();
+}
+$("#nextBtn").onclick = next;
+$("#prevBtn").onclick = prev;
+$("#fsBtn").onclick = toggleFs;
+// buttons inside slides must not steal keyboard focus (Space would re-click them)
+document.addEventListener("click", e => { if (e.target.closest("button")) e.target.closest("button").blur(); });
+addEventListener("resize", fit);
+
+/* ---------- 5. 원탁 회전 ---------- */
+(() => {
+  const svg = $("#rotSvg"), cx = 230, cy = 230, R = 168;
+  el("circle", { cx, cy, r: 128, fill: "#c9a273", stroke: "#8a5a2b", "stroke-width": 6 }, svg);
+  el("circle", { cx, cy, r: 100, fill: "none", stroke: "#8a5a2b", "stroke-width": 2, "stroke-dasharray": "6 8" }, svg);
+  el("polygon", { points: `${cx - 14},16 ${cx + 14},16 ${cx},36`, fill: "#1f2433" }, svg);
+  const names = ["A", "B", "C", "D"];
+  const seats = names.map(n => {
+    const g = el("g", {}, svg);
+    el("circle", { r: 36, fill: COLORS[n] }, g);
+    const t = el("text", { "text-anchor": "middle", dy: "12", "font-size": 34, "font-weight": 800, fill: "#fff" }, g);
+    t.textContent = n;
+    return g;
+  });
+  const live = el("text", { x: cx, y: cy + 12, "text-anchor": "middle", "font-size": 34, "font-weight": 800, fill: "#3b2a15", "font-family": "Consolas,monospace" }, svg);
+  let angle = 0;
+  function place(a) {
+    angle = a;
+    seats.forEach((g, i) => {
+      const th = (-90 + i * 90 + a) * Math.PI / 180;
+      g.setAttribute("transform", `translate(${cx + R * Math.cos(th)},${cy + R * Math.sin(th)})`);
+    });
+    const k = ((Math.round(a / 90) % 4) + 4) % 4;
+    live.textContent = [0, 1, 2, 3].map(i => names[((i - k) % 4 + 4) % 4]).join("");
+  }
+  function rotateTo(target, animate) {
+    if (!animate) return place(target);
+    const from = angle;
+    tween(800, p => place(from + (target - from) * p));
+  }
+  place(0);
+  $("#rotBtn").onclick = () => rotateTo(Math.round(angle / 90) * 90 + 90, true);
+  hooks["s-rot"] = (st, animate) => rotateTo(Math.min(st, 3) * 90, animate && st <= 3);
+})();
+
+/* ---------- 6. 한 명 고정 ---------- */
+(() => {
+  const perms = ["BCD", "BDC", "CBD", "CDB", "DBC", "DCB"];
+  const grid = $("#fixGrid");
+  perms.forEach((p, idx) => {
+    const svg = el("svg", { viewBox: "0 0 200 150" });
+    svg.classList.add("f"); svg.dataset.step = "1"; svg.style.setProperty("--i", idx);
+    el("circle", { cx: 100, cy: 66, r: 32, fill: "#e9d5b7", stroke: "#8a5a2b", "stroke-width": 3 }, svg);
+    ("A" + p).split("").forEach((n, i) => {
+      const th = (-90 + i * 90) * Math.PI / 180;
+      const x = 100 + 48 * Math.cos(th), y = 66 + 48 * Math.sin(th);
+      el("circle", { cx: x, cy: y, r: 15, fill: COLORS[n], stroke: n === "A" ? "#1f2433" : "none", "stroke-width": 3 }, svg);
+      const t = el("text", { x, y: y + 6, "text-anchor": "middle", "font-size": 16, "font-weight": 800, fill: "#fff" }, svg);
+      t.textContent = n;
+    });
+    const lbl = el("text", { x: 100, y: 143, "text-anchor": "middle", "font-size": 14, fill: "#6b7080" }, svg);
+    lbl.textContent = "A 다음: " + p;
+    grid.appendChild(svg);
+  });
+})();
+
+/* ---------- 8. 끈으로 묶기 ---------- */
+(() => {
+  const svg = $("#tieSvg"), cx = 220, cy = 220, R = 160;
+  el("circle", { cx, cy, r: 112, fill: "#c9a273", stroke: "#8a5a2b", "stroke-width": 6 }, svg);
+  const rope = el("rect", { rx: 40, fill: "none", stroke: "#e8590c", "stroke-width": 6, "stroke-dasharray": "10 6", opacity: 0 }, svg);
+  const people = [["회", "#e8590c"], ["부", "#f08c00"], ["C", COLORS.C], ["D", COLORS.D], ["E", COLORS.E]];
+  const gs = people.map(([n, c]) => {
+    const g = el("g", {}, svg);
+    el("circle", { r: 32, fill: c }, g);
+    const t = el("text", { "text-anchor": "middle", dy: "11", "font-size": 28, "font-weight": 800, fill: "#fff" }, g);
+    t.textContent = n;
+    return g;
+  });
+  const pt = deg => [cx + R * Math.cos(deg * Math.PI / 180), cy + R * Math.sin(deg * Math.PI / 180)];
+  const five = [0, 1, 2, 3, 4].map(i => pt(-90 + 72 * i));
+  const top = pt(-90);
+  const four = [[top[0] - 34, top[1]], [top[0] + 34, top[1]], pt(0), pt(90), pt(180)];
+  const swapped = [four[1], four[0], ...four.slice(2)];
+  let pos = five.map(p => p.slice());
+  function setPos(ps) {
+    pos = ps.map(p => p.slice());
+    ps.forEach((p, i) => gs[i].setAttribute("transform", `translate(${p[0]},${p[1]})`));
+  }
+  function moveTo(target, animate, after) {
+    if (!animate) { setPos(target); if (after) after(); return; }
+    const from = pos.map(p => p.slice());
+    tween(900, e => setPos(from.map((p, i) => [p[0] + (target[i][0] - p[0]) * e, p[1] + (target[i][1] - p[1]) * e])), after);
+  }
+  rope.setAttribute("x", top[0] - 76); rope.setAttribute("y", top[1] - 42);
+  rope.setAttribute("width", 152); rope.setAttribute("height", 84);
+  hooks["s-tie"] = (st, animate) => {
+    const target = st < 2 ? five : st < 4 ? four : swapped;
+    rope.setAttribute("opacity", 0);
+    moveTo(target, animate, () => rope.setAttribute("opacity", st >= 2 ? 1 : 0));
+  };
+  setPos(five);
+})();
+
+/* ---------- 10. 자물쇠 ---------- */
+(() => {
+  const box = $("#wheels"), digits = [0, 0, 0], strips = [];
+  for (let i = 0; i < 3; i++) {
+    const w = document.createElement("div"); w.className = "wheel";
+    const s = document.createElement("div"); s.className = "strip";
+    for (let d = 0; d < 10; d++) { const c = document.createElement("div"); c.textContent = d; s.appendChild(c); }
+    w.appendChild(s); box.appendChild(w); strips.push(s);
+    w.onclick = () => { stop(); digits[i] = (digits[i] + 1) % 10; show(true); };
+  }
+  const count = $("#lockCount");
+  function show(smooth) {
+    strips.forEach((s, i) => {
+      s.style.transition = smooth ? "" : "none";
+      s.style.transform = `translateY(${-digits[i] * 96}px)`;
+    });
+    count.textContent = digits.join("");
+  }
+  let timer = null;
+  function stop() { if (timer) cancelAnimationFrame(timer); timer = null; }
+  $("#lockRun").onclick = () => {
+    stop();
+    const t0 = performance.now();
+    (function frame() {
+      // time-based so the count takes ~4s regardless of frame rate
+      const n = Math.min(999, Math.floor((performance.now() - t0) / 4000 * 999));
+      digits[0] = Math.floor(n / 100); digits[1] = Math.floor(n / 10) % 10; digits[2] = n % 10;
+      show(false);
+      if (n < 999) timer = requestAnimationFrame(frame);
+      else { timer = null; count.innerHTML = "000 ~ 999 → <span class='blue'>1000가지</span>"; }
+    })();
+  };
+  $("#lockReset").onclick = () => { stop(); digits.fill(0); show(true); };
+  show(false);
+})();
+
+/* ---------- 12. 누가 고르는가 ---------- */
+(() => {
+  const svg = $("#chooseSvg");
+  const clubs = [["농구", "#e8590c"], ["야구", "#1c7ed6"], ["축구", "#2b8a3e"]];
+  const sy = i => 50 + i * 92, cyy = i => 80 + i * 110;
+  const lines = [0, 1, 2, 3].map(() => el("path", { fill: "none", "stroke-width": 5, "stroke-linecap": "round" }, svg));
+  [0, 1, 2, 3].forEach(i => {
+    el("circle", { cx: 80, cy: sy(i), r: 30, fill: "#1f2433" }, svg);
+    const t = el("text", { x: 80, y: sy(i) + 8, "text-anchor": "middle", "font-size": 22, "font-weight": 800, fill: "#fff" }, svg);
+    t.textContent = "학생" + (i + 1);
+    t.setAttribute("font-size", 15);
+  });
+  clubs.forEach(([n, c], j) => {
+    el("rect", { x: 380, y: cyy(j) - 32, width: 120, height: 64, rx: 14, fill: c }, svg);
+    const t = el("text", { x: 440, y: cyy(j) + 9, "text-anchor": "middle", "font-size": 24, "font-weight": 800, fill: "#fff" }, svg);
+    t.textContent = n;
+  });
+  const seen = new Set();
+  const info = $("#chooseInfo");
+  function pick(animate) {
+    const ch = [0, 1, 2, 3].map(() => Math.floor(Math.random() * 3));
+    seen.add(ch.join(""));
+    ch.forEach((j, i) => {
+      const d = `M110,${sy(i)} C250,${sy(i)} 250,${cyy(j)} 378,${cyy(j)}`;
+      const l = lines[i];
+      l.setAttribute("d", d); l.setAttribute("stroke", clubs[j][1]);
+      const len = l.getTotalLength();
+      l.style.transition = "none";
+      l.style.strokeDasharray = len; l.style.strokeDashoffset = animate ? len : 0;
+      if (animate) { l.getBoundingClientRect(); l.style.transition = "stroke-dashoffset .6s"; l.style.strokeDashoffset = 0; }
+    });
+    info.innerHTML = `${ch.map(j => clubs[j][0]).join(" · ")}<br><span style="font-size:20px">지금까지 나온 서로 다른 결과: <b>${seen.size}</b>가지 ${seen.size === 81 ? "(전부 다 나왔다!)" : ""}</span>`;
+  }
+  $("#chooseOne").onclick = () => pick(true);
+  $("#chooseMany").onclick = () => { for (let k = 0; k < 199; k++) pick(false); pick(true); };
+  hooks["s-choose"] = () => { if (!seen.size) pick(false); };
+})();
+
+/* ---------- 14. 모스 부호 ---------- */
+(() => {
+  const list = $("#morseList");
+  ["..--", ".-.-", ".--.", "-..-", "-.-.", "--.."].forEach(c => {
+    const d = document.createElement("div"); d.className = "code";
+    c.split("").forEach(ch => { const s = document.createElement("span"); s.className = ch === "." ? "dot" : "dash"; d.appendChild(s); });
+    list.appendChild(d);
+  });
+})();
+
+/* ---------- 15. 이름표 떼기 ---------- */
+(() => {
+  const box = $("#labelRows");
+  const p3 = [[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]];
+  const p2 = [[1, 2], [2, 1]];
+  const aCol = { 1: "#e8590c", 2: "#f59f00", 3: "#c92a2a" }, bCol = { 1: "#1c7ed6", 2: "#7048e8" };
+  let r = 0;
+  p3.forEach(a => p2.forEach(b => {
+    const row = document.createElement("div"); row.className = "lrow";
+    row.style.top = (r * 35) + "px"; row.style.setProperty("--up", (-r * 35) + "px");
+    a.forEach(k => row.insertAdjacentHTML("beforeend", `<div class="tile a" style="background:${aCol[k]}">a<sub>${k}</sub></div>`));
+    b.forEach(k => row.insertAdjacentHTML("beforeend", `<div class="tile b" style="background:${bCol[k]}">b<sub>${k}</sub></div>`));
+    box.appendChild(row); r++;
+  }));
+  hooks["s-label"] = st => {
+    box.style.opacity = st >= 1 ? 1 : .25;
+    box.classList.toggle("stripped", st >= 2);
+    box.classList.toggle("collapsed", st >= 3);
+  };
+  box.style.transition = "opacity .5s";
+})();
+
+/* ---------- 17. 최단 경로 ---------- */
+(() => {
+  const svg = $("#gridSvg"), C = 100, ox = 30, oy = 30;
+  for (let i = 0; i <= 4; i++) el("line", { x1: ox + i * C, y1: oy, x2: ox + i * C, y2: oy + 2 * C, stroke: "#c9ccd3", "stroke-width": 4 }, svg);
+  for (let j = 0; j <= 2; j++) el("line", { x1: ox, y1: oy + j * C, x2: ox + 4 * C, y2: oy + j * C, stroke: "#c9ccd3", "stroke-width": 4 }, svg);
+  const path = el("polyline", { fill: "none", stroke: "#e8590c", "stroke-width": 9, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+  [["A", ox, oy + 2 * C, "#1f2433"], ["B", ox + 4 * C, oy, "#1f2433"]].forEach(([n, x, y, c]) => {
+    el("circle", { cx: x, cy: y, r: 22, fill: c }, svg);
+    const t = el("text", { x, y: y + 8, "text-anchor": "middle", "font-size": 22, "font-weight": 800, fill: "#fff" }, svg);
+    t.textContent = n;
+  });
+  // all 15 words: choose 2 of 6 positions for ↑
+  const words = [];
+  for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++)
+    words.push([0, 1, 2, 3, 4, 5].map(k => (k === i || k === j) ? "U" : "R"));
+  const pts = (w, c, x0, y0) => {
+    let x = 0, y = 0; const out = [[x0, y0 + 2 * c]];
+    w.forEach(m => { if (m === "R") x++; else y++; out.push([x0 + x * c, y0 + (2 - y) * c]); });
+    return out.map(p => p.join(",")).join(" ");
+  };
+  let idx = 0;
+  function draw(animate) {
+    const w = words[idx];
+    path.setAttribute("points", pts(w, C, ox, oy));
+    const len = 6 * C;
+    path.style.transition = "none";
+    path.style.strokeDasharray = len; path.style.strokeDashoffset = animate ? len : 0;
+    if (animate) { path.getBoundingClientRect(); path.style.transition = "stroke-dashoffset 1s ease"; path.style.strokeDashoffset = 0; }
+    $("#gridWord").textContent = w.map(m => m === "R" ? "→" : "↑").join("");
+  }
+  $("#gridBtn").onclick = () => { idx = (idx + 1 + Math.floor(Math.random() * 13)) % 15; draw(true); };
+  const g = $("#pathGrid");
+  words.forEach((w, k) => {
+    const s = el("svg", { viewBox: "0 0 100 60" });
+    s.classList.add("f"); s.dataset.step = "1"; s.style.setProperty("--i", k);
+    for (let i = 0; i <= 4; i++) el("line", { x1: 10 + i * 20, y1: 10, x2: 10 + i * 20, y2: 50, stroke: "#dde0e5", "stroke-width": 2 }, s);
+    for (let j = 0; j <= 2; j++) el("line", { x1: 10, y1: 10 + j * 20, x2: 90, y2: 10 + j * 20, stroke: "#dde0e5", "stroke-width": 2 }, s);
+    el("polyline", { points: pts(w, 20, 10, 10), fill: "none", stroke: "#e8590c", "stroke-width": 4, "stroke-linejoin": "round" }, s);
+    g.appendChild(s);
+  });
+  draw(false);
+})();
+
+/* ---------- 19. 주사위 시뮬레이션 ---------- */
+(() => {
+  const theo = { 3: 1, 4: 3, 5: 6, 6: 10, 7: 15, 8: 21, 9: 25, 10: 27, 11: 27, 12: 25, 13: 21, 14: 15, 15: 10, 16: 6, 17: 3, 18: 1 };
+  const MAX = 0.16, chart = $("#chart"), labels = $("#chartLabels");
+  const cnt = {}, fills = {};
+  for (let s = 3; s <= 18; s++) {
+    cnt[s] = 0;
+    const c = document.createElement("div"); c.className = "bcol" + (s === 9 ? " s9" : s === 10 ? " s10" : "");
+    const f = document.createElement("div"); f.className = "bfill"; f.style.height = "0%";
+    const t = document.createElement("div"); t.className = "btheo"; t.style.bottom = (theo[s] / 216 / MAX * 100) + "%";
+    c.append(f, t); chart.appendChild(c); fills[s] = f;
+    const l = document.createElement("div"); l.textContent = s;
+    if (s === 9) l.className = "blue"; if (s === 10) l.className = "acc";
+    labels.appendChild(l);
+  }
+  let total = 0;
+  const pct = n => total ? (n / total * 100).toFixed(1) + "%" : "0";
+  function update() {
+    for (let s = 3; s <= 18; s++) fills[s].style.height = Math.min(100, total ? cnt[s] / total / MAX * 100 : 0) + "%";
+    $("#simTotal").textContent = "던진 횟수: " + total.toLocaleString();
+    $("#sim9").textContent = `${cnt[9]}회 (${pct(cnt[9])})`;
+    $("#sim10").textContent = `${cnt[10]}회 (${pct(cnt[10])})`;
+  }
+  const die = () => 1 + Math.floor(Math.random() * 6);
+  $$("[data-roll]").forEach(b => b.onclick = () => {
+    for (let k = 0; k < +b.dataset.roll; k++) { cnt[die() + die() + die()]++; total++; }
+    update();
+  });
+  $("#simReset").onclick = () => { for (const s in cnt) cnt[s] = 0; total = 0; update(); };
+  update();
+})();
+
+/* ---------- start ---------- */
+fit();
+const m = location.hash.match(/^#(\d+)(?:\.(\d+))?/);
+go(m ? +m[1] - 1 : 0, m && m[2] ? +m[2] : 0);
+</script>
+</body>
+</html>

@@ -7,6 +7,14 @@
   - 조작: → / Space 다음, ← 이전, F 전체 화면
   - PDF로 배포: 브라우저에서 Ctrl+P → "PDF로 저장" (모든 단계가 펼쳐진 상태로 인쇄됨)
 
+## 웹사이트 (GitHub Pages)
+- 주소: https://peacanes-tech.github.io/probability-statistics-lectures/
+- `docs/` 폴더가 그대로 웹사이트가 됨 (main 브랜치 /docs)
+  - `docs/lectures/NN/` : 강의 슬라이드 웹판 (직접 고치지 말고 아래 명령으로 다시 만들기)
+  - `docs/quiz/` : 강의별 간단 퀴즈
+  - `docs/playground/` : Manim 스타일 애니메이션 플레이그라운드 (`manim-lite.js`)
+- 슬라이드를 고친 뒤: `bash tools/build_pages.sh` → 커밋 → push 하면 몇 분 뒤 웹에 반영
+
 ## 폴더 구조
 - 00_공통/교과서   : 교과서 원본 PDF
 - 00_공통/템플릿   : 슬라이드 양식

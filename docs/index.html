@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>확률과 통계 강의</title>
+<link rel="stylesheet" href="site.css">
+<style>
+.lec{display:grid;gap:14px}
+.lec .card{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.lec .no{font-size:28px;font-weight:800;color:var(--acc);width:52px}
+.lec .body{flex:1;min-width:220px}
+.lec h2{font-size:21px;margin:0}
+.lec p{margin:2px 0 0;color:var(--mute);font-size:15px}
+.lec .acts{display:flex;gap:8px;flex-wrap:wrap}
+.lec .soon{opacity:.55}
+.lec .soon .acts{font-size:14px;color:var(--mute)}
+.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:14px}
+.tools a{text-decoration:none;color:inherit}
+.tools .card:hover{border-color:var(--acc)}
+.tools h3{margin:0 0 4px;font-size:19px}
+.tools p{margin:0;color:var(--mute);font-size:15px}
+h2.sec{font-size:15px;color:var(--mute);margin:36px 0 10px;letter-spacing:.04em}
+footer{margin-top:40px;font-size:13px;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="kicker">대학교 1학년 · 확률과 통계</div>
+  <h1>확률과 통계 강의자료</h1>
+  <p class="lead">슬라이드는 → / Space로 넘기고 F로 전체 화면. 퀴즈와 플레이그라운드는 휴대폰에서도 됩니다.</p>
+
+  <h2 class="sec">강의</h2>
+  <div class="lec">
+    <div class="card">
+      <div class="no">1</div>
+      <div class="body"><h2>여러 가지 순열</h2><p>원순열 · 중복순열 · 같은 것이 있는 순열</p></div>
+      <div class="acts">
+        <a class="btn" href="lectures/01/">슬라이드</a>
+        <a class="btn ghost" href="quiz/01.html">퀴즈</a>
+      </div>
+    </div>
+    <div class="card soon"><div class="no">2</div><div class="body"><h2>중복조합</h2><p>순서 없이, 중복을 허용해 고르기</p></div><div class="acts">준비 중</div></div>
+    <div class="card soon"><div class="no">3</div><div class="body"><h2>이항정리</h2><p>이항계수와 파스칼의 삼각형</p></div><div class="acts">준비 중</div></div>
+  </div>
+
+  <h2 class="sec">직접 해 보기</h2>
+  <div class="tools">
+    <a href="quiz/01.html"><div class="card"><h3>1강 간단 퀴즈</h3><p>10문제, 바로 채점과 풀이. 틀린 문제만 다시 풀기.</p></div></a>
+    <a href="playground/"><div class="card"><h3>순열 플레이그라운드</h3><p>Manim 스타일 애니메이션 코드를 고쳐 가며 원순열·중복순열·최단 경로를 직접 움직여 보기.</p></div></a>
+  </div>
+
+  <footer>이미지 출처는 각 슬라이드 마지막 장에 있습니다 (Wikimedia Commons). 문제는 미래엔 『확률과 통계』 교과서를 참고했습니다.</footer>
+</div>
+</body>
+</html>
